@@ -271,6 +271,9 @@ $(function(){
       $(this).replaceWith(taskSpan);
   });
 
+    // Pass task's <li> element into auditTask() to check new due date
+    auditTask($(taskSpan).closest(".list-group-item"));
+
   // remove all tasks
   $("#remove-tasks").on("click", function() {
     for (var key in tasks) {
