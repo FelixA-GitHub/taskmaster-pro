@@ -14,6 +14,8 @@ $(function(){
     // append span and p element to parent li
     taskLi.append(taskSpan, taskP);
 
+    // check due date
+    auditTask(taskLi); // audit task to happens here to make sure all proper classes are added before we append list to page
 
     // append to ul list on the page
     $("#list-" + taskList).append(taskLi);
@@ -98,6 +100,26 @@ $(function(){
     }
   });
 
+  var auditTask = function(taskEl) {
+    // get date from task element
+    var date = $(taskEl).find("span").text().trim();
+
+    // convert due date to moment object at 5:00pm
+    var time = moment(date, "L").set("hour", 17);
+
+    // remove any old classes from element
+    $(taskEl).removeClass("list-group-item-warning list-group-item-danger");
+
+    // apply new class if task is near/over due date
+    if (moment().isAfter(time)) {
+      $(taskEl).addClass("list-group-item-danger");
+    }
+    // checks to see how many days away we are from the due date
+    else if (Math.abs(moment().diff(time, "days")) <= 2) {
+      $(taskEl).addClass("list-group-item-warning");
+    }
+  };
+
   // trash icon can be dropped onto
   $("#trash").droppable({
     accept: ".card .list-group-item",
@@ -149,6 +171,12 @@ $(function(){
       saveTasks();
     }
   });
+
+  // modal datepicker
+  $("#modalDueDate").datepicker({
+    minDate: 1 // this prevents selecting due dates that have passed
+  });
+
 
   // task text was clicked
   $(".list-group").on("click", "p", function() {
@@ -206,12 +234,21 @@ $(function(){
       .val(date);
     $(this).replaceWith(dateInput);
 
+    // enable jquery ui datepicker
+    dateInput.datepicker({
+      minDate: 1,
+      onClose: function() {
+        // when calendar is closed, force a "change" event on the `dateInput`
+        $(this).trigger("change");
+      }
+    });
+
     // automatically bring up the calendar
     dateInput.trigger("focus");
   });
 
   // value of due date was changed
-  $(".list-group").on("blur", "input[type='text']", function() {
+  $(".list-group").on("change", "input[type='text']", function() {
     var date = $(this).val();
 
     // get status type and position in the list
